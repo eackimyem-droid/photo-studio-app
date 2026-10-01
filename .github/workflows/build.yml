@@ -1,0 +1,71 @@
+name: "Build & Release Desktop App"
+
+on:
+  push:
+    tags:
+      - "v*" # រត់ Workflow នេះតែពេល Push Tag ដែលផ្តើមដោយ v (ឧទាហរណ៍: v1.0.0, v1.0.1)
+  workflow_dispatch: # អនុញ្ញាតឱ្យ Trigger រត់ Manual ពី GitHub Web Dashboard បានផងដែរ
+
+jobs:
+  build-windows:
+    permissions:
+      contents: write # ត្រូវការ Permission សម្រាប់បង្កើត Release & Upload Artifacts
+    runs-on: windows-latest
+
+    steps:
+      # 1. Checkout Source Code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js Environment (សម្រាប់ React & Tauri CLI)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      # 3. Setup Python Environment
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      # 4. Setup Rust Toolchain (សម្រាប់ Tauri 2.0 Backend)
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      # 5. Rust Cache ដើម្បបង្កើនល្បឿន Build
+      - name: Rust Cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      # 6. Install Frontend Dependencies
+      - name: Install Frontend Dependencies
+        run: npm ci
+
+      # 7. Install Python Requirements & Build Python Sidecar Engine Executable (.exe)
+      - name: Build Python Sidecar Executable
+        run: |
+          cd python_engine
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+          python build_engine.py
+        shell: cmd
+
+      # 8. Build Tauri Desktop Installer (.msi / .exe) & Draft GitHub Release
+      - name: Build Tauri App & Draft Release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "Photo Studio Desktop App ${{ github.ref_name }}"
+          releaseBody: "🎉 ផ្លាស់ប្តូរ ឬកែប្រែថ្មីក្នុង Version ${{ github.ref_name }} ត្រូវបានផ្ទៀងផ្ទាត់ និង Build រួចរាល់!"
+          releaseDraft: true
+          prerelease: false
+          args: --target x86_64-pc-windows-msvc

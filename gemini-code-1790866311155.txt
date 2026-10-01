@@ -1,0 +1,51 @@
+photo-studio-app/
+├── src/                          # 🎨 Frontend (React + TypeScript)
+│   ├── assets/                   # Icons, Templates, Default Backgrounds
+│   ├── components/               # UI Components
+│   │   ├── canvas/               # Image Preview, Before/After Slider
+│   │   ├── controls/             # Beauty Sliders, Crop Presets, Clothing Selector
+│   │   └── layout/               # Sidebar, Header, Toolbar
+│   ├── hooks/                    # Custom React Hooks (useImageProcessor, useCanvas)
+│   ├── services/                 # Tauri IPC Bridges (ហៅទៅកាន់ Python sidecar)
+│   ├── store/                    # State Management (Zustand)
+│   ├── types/                    # TypeScript Interfaces & Definitions
+│   ├── App.tsx                   # Main Dashboard UI
+│   └── main.tsx
+│
+├── src-tauri/                    # 🦀 Tauri (Rust Backend)
+│   ├── bin/                      # កន្លែងដាក់ Python Sidecar Executable (pyinstaller output)
+│   │   ├── python-engine-x86_64-pc-windows-msvc.exe
+│   │   └── python-engine-aarch64-apple-darwin
+│   ├── src/
+│   │   ├── commands.rs           # Rust Bridge Functions (IPC)
+│   │   └── main.rs               # Tauri Entry Point & Sidecar Spawner
+│   ├── Cargo.toml                # Rust Dependencies
+│   └── tauri.conf.json           # Tauri App Configuration
+│
+├── python_engine/                # 🐍 Python AI Processing Engine (Core Logic)
+│   ├── models/                   # Local ONNX Models (.onnx)
+│   │   ├── rmbg_v1.4.onnx        # Background Removal Model (~170MB)
+│   │   └── face_landmarker.task  # MediaPipe Landmarker
+│   ├── presets/                  # Clothes PNG Templates (Suit, Shirts)
+│   │   ├── suits/
+│   │   └── shirts/
+│   ├── src/                      # Python Source Code
+│   │   ├── face/                 # Detect, Alignment, Crop Logic
+│   │   │   ├── detector.py
+│   │   │   └── aligner.py
+│   │   ├── beauty/               # Skin smoothing, Whitening, Sharpen
+│   │   │   ├── skin.py
+│   │   │   └── eyes.py
+│   │   ├── background/           # ONNX Background Remover
+│   │   │   └── remover.py
+│   │   ├── id_photo/             # Passport, 3x4, A4 Grid Printing Layout
+│   │   │   ├── cropper.py
+│   │   │   └── a4_layout.py
+│   │   └── utils/                # Helper functions (Image I/O, Base64)
+│   ├── main.py                   # Python Entry Point (CLI / JSON RPC Bridge)
+│   ├── requirements.txt          # Python Packages
+│   └── build_engine.py           # PyInstaller Script សម្រាប់ Build ជា .exe/.bin
+│
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
